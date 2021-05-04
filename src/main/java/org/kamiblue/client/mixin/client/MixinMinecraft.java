@@ -19,7 +19,6 @@ import org.kamiblue.client.gui.mc.KamiGuiUpdateNotification;
 import org.kamiblue.client.manager.managers.HotbarManager;
 import org.kamiblue.client.mixin.client.accessor.player.AccessorEntityPlayerSP;
 import org.kamiblue.client.mixin.client.accessor.player.AccessorPlayerControllerMP;
-import org.kamiblue.client.module.modules.combat.CrystalAura;
 import org.kamiblue.client.module.modules.player.BlockInteraction;
 import org.kamiblue.client.plugin.PluginError;
 import org.kamiblue.client.util.Wrapper;
@@ -81,32 +80,7 @@ public abstract class MixinMinecraft {
         Wrapper.getMinecraft().profiler.endSection();
     }
 
-    // Fix random crystal placing when eating gapple in offhand
-    @Inject(method = "rightClickMouse", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/entity/EntityPlayerSP;getHeldItem(Lnet/minecraft/util/EnumHand;)Lnet/minecraft/item/ItemStack;"), cancellable = true)
-    public void rightClickMouseAtInvokeGetHeldItem(CallbackInfo ci) {
-        EntityPlayerSP player = Wrapper.getPlayer();
-        WorldClient world = Wrapper.getWorld();
-        PlayerControllerMP playerController = Wrapper.getMinecraft().playerController;
-        RayTraceResult objectMouseOver = Wrapper.getMinecraft().objectMouseOver;
-
-        if (player == null || world == null || playerController == null) return;
-
-        if (CrystalAura.INSTANCE.isDisabled() || CrystalAura.INSTANCE.getInactiveTicks() > 2) return;
-        if (player.getHeldItemOffhand().getItem() == Items.END_CRYSTAL) return;
-        if (HotbarManager.INSTANCE.getServerSideItem(player).getItem() != Items.END_CRYSTAL) return;
-
-        ci.cancel();
-
-        for (EnumHand enumhand : EnumHand.values()) {
-            ItemStack itemstack = player.getHeldItem(enumhand);
-            if (itemstack.isEmpty() && (objectMouseOver == null || objectMouseOver.typeOfHit == RayTraceResult.Type.MISS)) {
-                ForgeHooks.onEmptyClick(player, enumhand);
-            }
-            if (!itemstack.isEmpty() && playerController.processRightClick(player, world, enumhand) == EnumActionResult.SUCCESS) {
-                Wrapper.getMinecraft().entityRenderer.itemRenderer.resetEquippedProgress(enumhand);
-            }
-        }
-    }
+    
 
     // Allows left click attack while eating lol
     @Inject(method = "processKeyBinds", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/settings/KeyBinding;isKeyDown()Z", shift = At.Shift.BEFORE, ordinal = 2))
